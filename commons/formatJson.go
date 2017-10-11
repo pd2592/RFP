@@ -8,9 +8,12 @@ type AnsM struct {
 }
 
 type QuesM struct {
-	QuestionId   string `json:"questionId,omitempty"`
-	QuestionText string `json:"questionText,omitempty"`
-	ConcatAns    []AnsM `json:"concatAns,omitempty"`
+	QuestionId        string `json:"questionId,omitempty"`
+	QuestionText      string `json:"questionText,omitempty"`
+	QuestionSubTypeId string `json:"questionSubTypeId,omitempty"`
+	GroupQuestionId   string `json:"groupQuestionId,omitempty"`
+	IsMandatory       string `json:"isMandatory,omitempty"`
+	ConcatAns         []AnsM `json:"concatAns,omitempty"`
 }
 
 type QuestionCat struct {

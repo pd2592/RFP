@@ -13,12 +13,12 @@ import (
 // }
 
 func RequestHotelQues(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Get some question based on questionCategoryParent !!!!")
+	fmt.Println("Get some question for Hotels !!!!")
 	err := r.ParseForm()
 	commons.CheckErr(err)
 	questionCategoryParent := r.FormValue("questionCategoryParent")
-	db.QuestionJsonByCat(questionCategoryParent)
-	fmt.Fprintf(w, questionCategoryParent)
+
+	fmt.Fprintf(w, db.QuestionJsonByCat(questionCategoryParent))
 }
 
 // body, err := ioutil.ReadAll(r.Body)

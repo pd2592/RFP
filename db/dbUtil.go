@@ -11,7 +11,7 @@ import (
 
 var db *sql.DB
 
-func QuestionJsonByCat(parentId string) {
+func QuestionJsonByCat(parentId string) string {
 	db = GetDB()
 	var parentCatVar commons.ParentCat
 	var questionCatVar commons.QuestionCat
@@ -29,9 +29,9 @@ func QuestionJsonByCat(parentId string) {
 
 		var quesMVars []commons.QuesM
 
-		stmt1, err := db.Query("Select questionMasterId, questionText from questionmaster where questionCategoryId = '" + questionCatVar.QuestionCategoryId + "'")
+		stmt1, err := db.Query("Select questionMasterId, questionText, groupQuestionId, questionSubTypeId, isMandatory from questionmaster where questionCategoryId = '" + questionCatVar.QuestionCategoryId + "'")
 		for stmt1.Next() {
-			err := stmt1.Scan(&quesMVar.QuestionId, &quesMVar.QuestionText)
+			err := stmt1.Scan(&quesMVar.QuestionId, &quesMVar.QuestionText, &quesMVar.GroupQuestionId, &quesMVar.QuestionSubTypeId, &quesMVar.IsMandatory)
 			commons.CheckErr(err)
 
 			var ansMVars []commons.AnsM
@@ -47,12 +47,15 @@ func QuestionJsonByCat(parentId string) {
 				ansMVars = append(ansMVars, ansMVar)
 			}
 			quesMVar = commons.QuesM{
-				QuestionId:   quesMVar.QuestionId,
-				QuestionText: quesMVar.QuestionText,
-				ConcatAns:    ansMVars,
+				QuestionId:        quesMVar.QuestionId,
+				QuestionText:      quesMVar.QuestionText,
+				QuestionSubTypeId: quesMVar.QuestionSubTypeId,
+				GroupQuestionId:   quesMVar.GroupQuestionId,
+				IsMandatory:       quesMVar.IsMandatory,
+				ConcatAns:         ansMVars,
 			}
 			quesMVars = append(quesMVars, quesMVar)
-			fmt.Println(quesMVars)
+
 		}
 		questionCatVar = commons.QuestionCat{
 			QuestionCategoryId: questionCatVar.QuestionCategoryId,
@@ -69,9 +72,8 @@ func QuestionJsonByCat(parentId string) {
 	}
 	b, err := json.Marshal(parentCatVar)
 	commons.CheckErr(err)
-	fmt.Println(string(b))
-	//return string(b)
-
+	//	fmt.Println(string(b))
+	return string(b)
 }
 
 func GetDB() *sql.DB {
