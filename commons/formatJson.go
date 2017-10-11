@@ -28,6 +28,25 @@ type ParentCat struct {
 	QuesCategory             []QuestionCat `json:"quesCategory,omitempty"`
 }
 
+type Answers struct {
+	Answer   string `json:"answer"`
+	AnswerID string `json:"answerId"`
+	Priority string `json:"priority"`
+}
+
+type Anss struct {
+	Answer            []Answers
+	GroupQuestionID   string `json:"groupQuestionId"`
+	QuestionID        string `json:"questionId"`
+	QuestionSubTypeID string `json:"questionSubTypeId"`
+}
+
+type MyJsonName struct {
+	Ans                  []Anss `json:"ans"`
+	ClientTypeMasterID   string `json:"clientTypeMasterId"`
+	TravelAgencyMasterID string `json:"travelAgencyMasterId"`
+}
+
 func UnmarshalQuestion(jsonStr string) *ParentCat {
 	res := &ParentCat{}
 	err := json.Unmarshal([]byte(jsonStr), res)
