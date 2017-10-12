@@ -29,26 +29,34 @@ type ParentCat struct {
 }
 
 type Answers struct {
+	AnswerId string `json:"answerId"`
 	Answer   string `json:"answer"`
-	AnswerID string `json:"answerId"`
 	Priority string `json:"priority"`
 }
 
 type Anss struct {
-	Answer            []Answers
-	GroupQuestionID   string `json:"groupQuestionId"`
-	QuestionID        string `json:"questionId"`
-	QuestionSubTypeID string `json:"questionSubTypeId"`
+	QuestionId        string    `json:"questionId"`
+	QuestionSubTypeId string    `json:"questionSubTypeId"`
+	GroupQuestionId   string    `json:"groupQuestionId"`
+	Answer            []Answers `json:"answer"`
 }
 
-type MyJsonName struct {
+type HotelRes struct {
+	TravelAgencyMasterId string `json:"travelAgencyMasterId"`
+	ClientTypeMasterId   string `json:"clientTypeMasterId"`
 	Ans                  []Anss `json:"ans"`
-	ClientTypeMasterID   string `json:"clientTypeMasterId"`
-	TravelAgencyMasterID string `json:"travelAgencyMasterId"`
 }
 
 func UnmarshalQuestion(jsonStr string) *ParentCat {
 	res := &ParentCat{}
+	err := json.Unmarshal([]byte(jsonStr), res)
+	CheckErr(err)
+	//fmt.Println(res)
+	return res
+}
+
+func UnmarshalResponse(jsonStr string) *HotelRes {
+	res := &HotelRes{}
 	err := json.Unmarshal([]byte(jsonStr), res)
 	CheckErr(err)
 	//fmt.Println(res)

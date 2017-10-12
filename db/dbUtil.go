@@ -76,6 +76,12 @@ func QuestionJsonByCat(parentId string) string {
 	return string(b)
 }
 
+func HotelResponse(hres *commons.HotelRes) string {
+
+	return hres.Ans[0].Answer[0].Answer
+
+}
+
 func GetDB() *sql.DB {
 	fmt.Println("I am inside db")
 	var err error

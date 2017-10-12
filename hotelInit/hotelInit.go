@@ -2,6 +2,7 @@ package hotelInit
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	commons "../commons"
@@ -19,6 +20,14 @@ func RequestHotelQues(w http.ResponseWriter, r *http.Request) {
 	questionCategoryParent := r.FormValue("questionCategoryParent")
 
 	fmt.Fprintf(w, db.QuestionJsonByCat(questionCategoryParent))
+}
+
+func ResponseHotelAns(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	commons.CheckErr(err)
+	Response := commons.UnmarshalResponse(string(body))
+
+	fmt.Println(db.HotelResponse(Response))
 }
 
 // body, err := ioutil.ReadAll(r.Body)
