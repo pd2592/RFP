@@ -11,6 +11,7 @@ import (
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/quesReqHotel", hotelInit.RequestHotelQues)
+	router.HandleFunc("/quesReqBySubCat", hotelInit.QuesBySubCat)
 	router.HandleFunc("/ansResHotel", hotelInit.ResponseHotelAns)
 	//hotelInit.SayHi("atddds")
 	log.Fatal(http.ListenAndServe(":8080", router))

@@ -22,6 +22,15 @@ func RequestHotelQues(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, db.QuestionJsonByCat(questionCategoryParent))
 }
 
+func QuesBySubCat(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Questions by subcategory !!!!")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	questionCategory := r.FormValue("questionSubCategory")
+	fmt.Fprintf(w, db.QuestionJsonBySubCat(questionCategory))
+
+}
+
 func ResponseHotelAns(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	commons.CheckErr(err)

@@ -7,13 +7,23 @@ type AnsM struct {
 	AnswerText string `json:"answerText,omitempty"`
 }
 
+type GroupQuestion struct {
+	GroupQuestionMasterId string `json:"groupQuestionMasterId,omitempty"`
+	GroupQuestionId       string `json:"groupQuestionId,omitempty"`
+	QuestionText          string `json:"questionText,omitempty"`
+	QuestionSubTypeId     string `json:"questionSubTypeId,omitempty"`
+}
+
 type QuesM struct {
-	QuestionId        string `json:"questionId,omitempty"`
-	QuestionText      string `json:"questionText,omitempty"`
-	QuestionSubTypeId string `json:"questionSubTypeId,omitempty"`
-	GroupQuestionId   string `json:"groupQuestionId,omitempty"`
-	IsMandatory       string `json:"isMandatory,omitempty"`
-	ConcatAns         []AnsM `json:"concatAns,omitempty"`
+	QuestionId          string          `json:"questionId,omitempty"`
+	QuestionText        string          `json:"questionText,omitempty"`
+	QuestionSubTypeId   string          `json:"questionSubTypeId,omitempty"`
+	GroupQuestionId     string          `json:"groupQuestionId,omitempty"`
+	ConnectedQuestionId string          `json:"connectedQuestionId,omitempty"`
+	AnswerMasterId      string          `json:"answerMasterId,omitempty"`
+	IsMandatory         string          `json:"isMandatory,omitempty"`
+	TabColumn           []GroupQuestion `json:"tabColumn,omitempty"`
+	ConcatAns           []AnsM          `json:"concatAns,omitempty"`
 }
 
 type QuestionCat struct {
@@ -26,6 +36,14 @@ type ParentCat struct {
 	QuestionCategoryParentId string        `json:"questionCategoryParentId,omitempty"`
 	QuestionCategoryParent   string        `json:"questionCategoryParent,omitempty"`
 	QuesCategory             []QuestionCat `json:"quesCategory,omitempty"`
+}
+
+type ParentSubCat struct {
+	QuestionCategoryParentId string  `json:"questionCategoryParentId"`
+	QuestionCategoryParent   string  `json:"questionCategoryParent"`
+	QuestionCategoryId       string  `json:"questionCategoryId"`
+	QuestionCategory         string  `json:"questionCategory"`
+	Ques                     []QuesM `json:"ques,omitempty"`
 }
 
 type Answers struct {
