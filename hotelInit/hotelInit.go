@@ -12,6 +12,9 @@ import (
 // func SayHi(ats string) {
 // 	fmt.Println(ats)
 // }
+func GetParentCategory(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, db.ParentCategory())
+}
 
 func RequestHotelQues(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Get some question for Hotels !!!!")
