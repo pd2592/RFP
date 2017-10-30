@@ -42,6 +42,16 @@ func ResponseHotelAns(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(db.HotelResponse(Response))
 }
 
+func EditHotelAns(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Get some question for Hotels !!!!")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	questionCategoryParent := r.FormValue("questionCategoryParent")
+	travelAgencyMasterId := r.FormValue("travelAgencyMasterId")
+
+	fmt.Fprintf(w, db.HotelEditResponse(questionCategoryParent, travelAgencyMasterId))
+}
+
 // body, err := ioutil.ReadAll(r.Body)
 // commons.CheckErr(err)
 // Question := commons.UnmarshalQuestion(string(body))

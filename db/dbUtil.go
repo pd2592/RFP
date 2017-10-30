@@ -104,6 +104,7 @@ func QuestionJsonByCat(parentId string) string {
 				IsMandatory:       quesMVar.IsMandatory,
 				TabColumn:         groupQuestionVars,
 				ConcatAns:         ansMVars,
+				Answer:            nil,
 			}
 			quesMVars = append(quesMVars, quesMVar)
 
@@ -117,6 +118,155 @@ func QuestionJsonByCat(parentId string) string {
 
 	}
 	parentCatVar = commons.ParentCat{
+
+		TravelAgencyMasterId:     "",
+		QuestionCategoryParentId: parentId,
+		QuestionCategoryParent:   "test",
+		QuesCategory:             questionCatVars,
+	}
+	b, err := json.Marshal(parentCatVar)
+	commons.CheckErr(err)
+	//	fmt.Println(string(b))
+	return string(b)
+}
+
+//editing and previewing own ans setting  ------edit required
+func HotelEditResponse(parentId, travelAgencyMasterId string) string {
+	db = GetDB()
+	var parentCatVar commons.ParentCat
+	var questionCatVar commons.QuestionCat
+	var questionCatVars []commons.QuestionCat
+	var groupQuestionVar commons.GroupQuestion
+
+	var quesMVar commons.QuesM
+	//var quesMVars []commons.QuesM
+	var ansMVar commons.AnsM
+	var answersVar commons.Answers
+	//var ansMVars []commons.AnsM
+
+	var count string
+	var method string
+	err := db.QueryRow("Select COUNT(*) from clientanswer where travelAgencyMasterId = '" + travelAgencyMasterId + "'").Scan(&count)
+	commons.CheckErr(err)
+	if count == "0" {
+		method = "create"
+	} else {
+		method = "edit"
+	}
+
+	retr_stmt, err := db.Query("Select qm.questionCategoryParentId, qm.questionCategoryId, qq.questionCategory from questionmaster as qm JOIN questioncategory as qq ON qm.questionCategoryId = qq.questionCategoryId where qq.parentId = '" + parentId + "' GROUP BY qq.questionCategoryId")
+	commons.CheckErr(err)
+	for retr_stmt.Next() {
+		err := retr_stmt.Scan(&parentCatVar.QuestionCategoryParentId, &questionCatVar.QuestionCategoryId, &questionCatVar.QuestionCategory)
+		commons.CheckErr(err)
+
+		var quesMVars []commons.QuesM
+
+		retr_stmt1, err := db.Query("Select questionMasterId, questionText, groupQuestionId, questionSubTypeId, isMandatory from questionmaster where questionCategoryId = '" + questionCatVar.QuestionCategoryId + "'")
+		for retr_stmt1.Next() {
+			err := retr_stmt1.Scan(&quesMVar.QuestionId, &quesMVar.QuestionText, &quesMVar.GroupQuestionId, &quesMVar.QuestionSubTypeId, &quesMVar.IsMandatory)
+			commons.CheckErr(err)
+
+			var ansMVars []commons.AnsM
+			var answersVars []commons.Answers
+			var groupQuestionVars []commons.GroupQuestion
+
+			retr_stmt2, err := db.Query("Select answerMasterId, answerText from answermaster where questionMasterId = '" + quesMVar.QuestionId + "'")
+			for retr_stmt2.Next() {
+				err := retr_stmt2.Scan(&ansMVar.AnswerId, &ansMVar.AnswerText)
+				commons.CheckErr(err)
+				ansMVar = commons.AnsM{
+					AnswerId:   ansMVar.AnswerId,
+					AnswerText: ansMVar.AnswerText,
+				}
+				ansMVars = append(ansMVars, ansMVar)
+			}
+
+			if quesMVar.QuestionSubTypeId == "10" && quesMVar.GroupQuestionId != "0" {
+				//get group questions here
+
+				retr_stmt3, err := db.Query("Select groupQuestionMasterId, groupQuestionId, questionText, questionSubTypeId from groupquestion where groupQuestionId = '" + quesMVar.GroupQuestionId + "'")
+				commons.CheckErr(err)
+
+				for retr_stmt3.Next() {
+					err := retr_stmt3.Scan(&groupQuestionVar.GroupQuestionMasterId, &groupQuestionVar.GroupQuestionId, &groupQuestionVar.QuestionText, &groupQuestionVar.QuestionSubTypeId)
+					commons.CheckErr(err)
+					groupQuestionVar = commons.GroupQuestion{
+						GroupQuestionMasterId: groupQuestionVar.GroupQuestionMasterId,
+						GroupQuestionId:       groupQuestionVar.GroupQuestionId,
+						QuestionText:          groupQuestionVar.QuestionText,
+						QuestionSubTypeId:     groupQuestionVar.QuestionSubTypeId,
+					}
+					groupQuestionVars = append(groupQuestionVars, groupQuestionVar)
+				}
+			}
+			if quesMVar.QuestionSubTypeId != "10" {
+
+				retr_stmt4, err := db.Query("Select answerId, answer, questionSubTypeId, groupQuestionId from clientanswer where questionMasterId = '" + quesMVar.QuestionId + "' and travelAgencyMasterId = '" + travelAgencyMasterId + "' and groupQuestionId = '0'")
+				commons.CheckErr(err)
+				for retr_stmt4.Next() {
+					err := retr_stmt4.Scan(&answersVar.AnswerId, &answersVar.Answer, &answersVar.QuestionSubTypeId, &answersVar.GroupQuestionMasterId)
+					commons.CheckErr(err)
+					answersVar = commons.Answers{
+						AnswerId:              answersVar.AnswerId,
+						Answer:                answersVar.Answer,
+						Priority:              "",
+						QuestionSubTypeId:     answersVar.QuestionSubTypeId,
+						GroupQuestionMasterId: answersVar.GroupQuestionMasterId,
+					}
+					answersVars = append(answersVars, answersVar)
+				}
+
+			} else {
+
+				fmt.Println("/////")
+				retr_stmt5, err := db.Query("Select groupQuestionMasterId from groupquestion where groupQuestionId = '" + quesMVar.GroupQuestionId + "'")
+				commons.CheckErr(err)
+				for retr_stmt5.Next() {
+					err := retr_stmt5.Scan(&quesMVar.QuestionId)
+					commons.CheckErr(err)
+
+					retr_stmt6, err := db.Query("Select answerId, answer, questionSubTypeId, groupQuestionId from clientanswer where questionMasterId = '" + quesMVar.QuestionId + "' and travelAgencyMasterId = '" + travelAgencyMasterId + "' and groupQuestionId = '" + quesMVar.GroupQuestionId + "'")
+					commons.CheckErr(err)
+					for retr_stmt6.Next() {
+						err := retr_stmt6.Scan(&answersVar.AnswerId, &answersVar.Answer, &answersVar.QuestionSubTypeId, &answersVar.GroupQuestionMasterId)
+						commons.CheckErr(err)
+						answersVar = commons.Answers{
+							AnswerId:              answersVar.AnswerId,
+							Answer:                answersVar.Answer,
+							Priority:              "",
+							QuestionSubTypeId:     answersVar.QuestionSubTypeId,
+							GroupQuestionMasterId: answersVar.GroupQuestionMasterId,
+						}
+						answersVars = append(answersVars, answersVar)
+					}
+				}
+			}
+			quesMVar = commons.QuesM{
+				QuestionId:        quesMVar.QuestionId,
+				QuestionText:      quesMVar.QuestionText,
+				QuestionSubTypeId: quesMVar.QuestionSubTypeId,
+				GroupQuestionId:   quesMVar.GroupQuestionId,
+				IsMandatory:       quesMVar.IsMandatory,
+				TabColumn:         groupQuestionVars,
+				ConcatAns:         ansMVars,
+				Answer:            answersVars,
+			}
+			quesMVars = append(quesMVars, quesMVar)
+
+		}
+		questionCatVar = commons.QuestionCat{
+			QuestionCategoryId: questionCatVar.QuestionCategoryId,
+			QuestionCategory:   questionCatVar.QuestionCategory,
+			Ques:               quesMVars,
+		}
+		questionCatVars = append(questionCatVars, questionCatVar)
+
+	}
+	parentCatVar = commons.ParentCat{
+
+		Method:                   method,
+		TravelAgencyMasterId:     "",
 		QuestionCategoryParentId: parentId,
 		QuestionCategoryParent:   "test",
 		QuesCategory:             questionCatVars,
@@ -229,6 +379,15 @@ func HotelResponse(hres *commons.HotelRes) string {
 	for i := range hres.Ans {
 		for j := range hres.Ans[i].Answer {
 
+			if CheckHotelAnswers(hres.Ans[i].QuestionId, hres.TravelAgencyMasterId, hres.Ans[i].Answer[j].GroupQuestionMasterId) {
+				// if hres.Ans[i].Answer[j].GroupQuestionMasterId != "0" {
+				// 	hres.Ans[i].QuestionId = hres.Ans[i].Answer[j].GroupQuestionMasterId
+				// }
+				del, err := db.Exec("delete from clientanswer where questionMasterId = '" + hres.Ans[i].QuestionId + "' and travelAgencyMasterId = '" + hres.TravelAgencyMasterId + "' and groupQuestionId = '" + hres.Ans[i].Answer[j].GroupQuestionMasterId + "'")
+				commons.CheckErr(err)
+				fmt.Println(del, " Row deleted")
+			}
+
 			if hres.Ans[i].QuestionSubTypeId == "10" {
 				insrtstmt, err := db.Prepare(`INSERT INTO clientanswer SET questionMasterId = ?, answerId = ?, answer = ?, groupQuestionId = ?, questionSubTypeId = ?, clientTypeMasterId = ?, travelAgencyMasterId= ?`)
 				fmt.Println("/////")
@@ -248,6 +407,7 @@ func HotelResponse(hres *commons.HotelRes) string {
 				fmt.Println(".....,,,,")
 				commons.CheckErr(err)
 				fmt.Println(res.LastInsertId)
+
 			}
 		}
 	}
@@ -259,6 +419,68 @@ func HotelResponse(hres *commons.HotelRes) string {
 //=====================================================================================
 // **********************company(stage - 2)****************************
 //=====================================================================================
+
+func GetBasicList() string {
+	db = GetDB()
+
+	var QuestionVar commons.BQuestion
+	var QuestionsVar []commons.BQuestion
+	var BasicQuestionVar commons.BasicQuestion
+
+	retr_stmt, err := db.Query("Select basicQuestionId, basicQuestion, bSubTypeId, division from basicquestion")
+	commons.CheckErr(err)
+
+	for retr_stmt.Next() {
+		err := retr_stmt.Scan(&QuestionVar.BqId, &QuestionVar.BqText, &QuestionVar.BSubType, &QuestionVar.Divison)
+		commons.CheckErr(err)
+		QuestionVar = commons.BQuestion{
+			BSubType: QuestionVar.BSubType,
+			BqId:     QuestionVar.BqId,
+			BqText:   QuestionVar.BqText,
+			Divison:  QuestionVar.Divison,
+			Answer:   " ",
+			AnswerId: " ",
+		}
+		QuestionsVar = append(QuestionsVar, QuestionVar)
+	}
+	BasicQuestionVar = commons.BasicQuestion{
+		RfpId:                " ",
+		RfpName:              " ",
+		TravelAgencyMasterId: " ",
+		Ques:                 QuestionsVar,
+	}
+	b, err := json.Marshal(BasicQuestionVar)
+	commons.CheckErr(err)
+	return string(b)
+}
+
+func RfpBasicAns(RfpBasicQ *commons.BasicQuestion) string {
+	db = GetDB()
+	var result string
+	insrtstmt, err := db.Prepare(`INSERT INTO rfpmaster SET rfpName = ?, travelAgencyMasterId = ?, clientTypeMasterId = ?, active = ?, completionStatus = ?, createDate = ?`)
+	commons.CheckErr(err)
+	createDate := time.Now()
+	fmt.Println("rfp.TravelAgencyMasterId", RfpBasicQ.TravelAgencyMasterId)
+	res, err := insrtstmt.Exec(RfpBasicQ.RfpName, RfpBasicQ.TravelAgencyMasterId, "4", "1", "0", createDate.String())
+	commons.CheckErr(err)
+	rfpid, err := res.LastInsertId()
+	count := 0
+	length := len(RfpBasicQ.Ques)
+	for i := range RfpBasicQ.Ques {
+		insrtstmt1, err := db.Prepare(`INSERT INTO basicrfpinfo SET rfpId = ?, travelAgencyMasterId = ?, basicQuestionId = ?, answer = ?, basicAnswerId = ?`)
+		commons.CheckErr(err)
+		res1, err := insrtstmt1.Exec(rfpid, RfpBasicQ.TravelAgencyMasterId, RfpBasicQ.Ques[i].BqId, RfpBasicQ.Ques[i].Answer, RfpBasicQ.Ques[i].AnswerId)
+		commons.CheckErr(err)
+		count++
+		fmt.Println(res1)
+	}
+	if count == length {
+		result = "all questions are saved"
+	} else {
+		result = "Failed to save some responses"
+	}
+	return result
+}
 
 func RfpRequest(rfp *commons.Rfp) string {
 
@@ -422,11 +644,13 @@ func RfpEditor(rfp *commons.Rfp) string {
 	return hotels
 }
 
-func ListHotels(cityId string) string {
+func ListHotels(CityId string) string {
+	db = GetDB()
 	fmt.Println("hotels...")
 	var ListHotelVar commons.ListHotel
 	var ListHotelsVar []commons.ListHotel
-	retr_stmt, err := db.Query("Select hotelsMasterId, hotelName, rstarRating, cityLocalityId, cityMasterId, distanceFromCity from hotelsmaster where cityMasterId = '" + cityId + "'")
+
+	retr_stmt, err := db.Query("Select hotelsMasterId, hotelName, rstarRating, cityLocalityId, cityMasterId, distanceFromCity from hotelsmaster where cityMasterId = '" + CityId + "'")
 	commons.CheckErr(err)
 
 	for retr_stmt.Next() {
@@ -531,12 +755,25 @@ func CheckDuplicate(tablename, columnname, rfpId, qId string) bool {
 	}
 }
 
+func CheckHotelAnswers(questionMasterId, travelAgencyMasterId, groupQuestionId string) bool {
+	fmt.Println("....")
+	db = GetDB()
+	var columnvalue string
+	err := db.QueryRow("Select COUNT(*) from clientanswer where questionMasterId = '" + questionMasterId + "' and travelAgencyMasterId = '" + travelAgencyMasterId + "' and groupQuestionId = '" + groupQuestionId + "'").Scan(&columnvalue)
+	commons.CheckErr(err)
+	if columnvalue != "0" {
+		return true
+	} else {
+		return false
+	}
+}
+
 func GetDB() *sql.DB {
 	//fmt.Println("I am inside db")
 	var err error
 	if db == nil {
-		db, err = sql.Open("mysql", "root:@/company_policy?parseTime=true&charset=utf8")
-		//db, err = sql.Open("mysql", "sriram:sriram123@tcp(127.0.0.1:3306)/hotnix_dev?charset=utf8")
+		//db, err = sql.Open("mysql", "root:@/company_policy?parseTime=true&charset=utf8")
+		db, err = sql.Open("mysql", "sriram:sriram123@tcp(127.0.0.1:3306)/hotnix_dev?parseTime=true&charset=utf8")
 
 		commons.CheckErr(err)
 	}

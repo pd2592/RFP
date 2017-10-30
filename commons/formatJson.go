@@ -24,6 +24,7 @@ type QuesM struct {
 	IsMandatory         string          `json:"isMandatory,omitempty"`
 	TabColumn           []GroupQuestion `json:"tabColumn,omitempty"`
 	ConcatAns           []AnsM          `json:"concatAns,omitempty"`
+	Answer              []Answers       `json:"answer,omitempty"`
 }
 
 //store questions details
@@ -35,6 +36,8 @@ type QuestionCat struct {
 
 //getting questions category wise
 type ParentCat struct {
+	Method                   string        `json:"method,omitempty"`
+	TravelAgencyMasterId     string        `json:"travelAgencyMasterId,omitempty"`
 	QuestionCategoryParentId string        `json:"questionCategoryParentId,omitempty"`
 	QuestionCategoryParent   string        `json:"questionCategoryParent,omitempty"`
 	QuesCategory             []QuestionCat `json:"quesCategory,omitempty"`
@@ -143,6 +146,31 @@ type RfpSend struct {
 	TravelAgencyMasterId string   `json:"travelAgencyMasterId,omitempty"`
 }
 
+//Creating and saving basic question
+type BasicQuestion struct {
+	RfpId                string      `json:"rfpId,omitempty"`
+	RfpName              string      `json:"rfpName,omitempty"`
+	TravelAgencyMasterId string      `json:"travelAgencyMasterId,omitempty"`
+	Ques                 []BQuestion `json:"ques,omitempty"`
+}
+
+type BQuestion struct {
+	BSubType string `json:"bSubType,omitempty"`
+	BqId     string `json:"bqId,omitempty"`
+	BqText   string `json:"bqText,omitempty"`
+	Divison  string `json:"divison,omitempty"`
+	Answer   string `json:"answer,omitempty"`
+	AnswerId string `json:"answerId,omitempty"`
+}
+
+func UnmarshalRFPBasic(jsonStr string) *BasicQuestion {
+	res := &BasicQuestion{}
+	err := json.Unmarshal([]byte(jsonStr), res)
+	CheckErr(err)
+	//fmt.Println(res)
+	return res
+}
+
 func UnmarshalQuestion(jsonStr string) *ParentCat {
 	res := &ParentCat{}
 	err := json.Unmarshal([]byte(jsonStr), res)
@@ -151,6 +179,7 @@ func UnmarshalQuestion(jsonStr string) *ParentCat {
 	return res
 }
 
+//hotel response
 func UnmarshalResponse(jsonStr string) *HotelRes {
 	res := &HotelRes{}
 	err := json.Unmarshal([]byte(jsonStr), res)
