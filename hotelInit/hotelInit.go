@@ -37,7 +37,9 @@ func QuesBySubCat(w http.ResponseWriter, r *http.Request) {
 func ResponseHotelAns(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	commons.CheckErr(err)
+	fmt.Println("Inside response")
 	Response := commons.UnmarshalResponse(string(body))
+	fmt.Println("Marshaled response")
 
 	fmt.Println(db.HotelResponse(Response))
 }
@@ -50,6 +52,15 @@ func EditHotelAns(w http.ResponseWriter, r *http.Request) {
 	travelAgencyMasterId := r.FormValue("travelAgencyMasterId")
 
 	fmt.Fprintf(w, db.HotelEditResponse(questionCategoryParent, travelAgencyMasterId))
+}
+
+func RfpRecieved(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Populate Rfp list for my hotel.....")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	hotelId := r.FormValue("hotelId")
+
+	fmt.Fprintf(w, db.ListRfpByHotel(hotelId))
 }
 
 // body, err := ioutil.ReadAll(r.Body)

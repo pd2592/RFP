@@ -423,63 +423,118 @@ func HotelResponse(hres *commons.HotelRes) string {
 func GetBasicList() string {
 	db = GetDB()
 
-	var QuestionVar commons.BQuestion
-	var QuestionsVar []commons.BQuestion
 	var BasicQuestionVar commons.BasicQuestion
-
-	retr_stmt, err := db.Query("Select basicQuestionId, basicQuestion, bSubTypeId, division from basicquestion")
+	var BDivisionVar commons.BDivision
+	var BDivisionsVar []commons.BDivision
+	retr_stmt, err := db.Query("Select division, divisionName from basicquestion GROUP BY division")
 	commons.CheckErr(err)
 
 	for retr_stmt.Next() {
-		err := retr_stmt.Scan(&QuestionVar.BqId, &QuestionVar.BqText, &QuestionVar.BSubType, &QuestionVar.Divison)
+		var division commons.LabVal
+		var QuestionsVar []commons.BQuestion
+
+		err := retr_stmt.Scan(&BDivisionVar.Division.Value, &BDivisionVar.Division.Label)
 		commons.CheckErr(err)
-		QuestionVar = commons.BQuestion{
-			BSubType: QuestionVar.BSubType,
-			BqId:     QuestionVar.BqId,
-			BqText:   QuestionVar.BqText,
-			Divison:  QuestionVar.Divison,
-			Answer:   " ",
-			AnswerId: " ",
+		division = commons.LabVal{
+			Label: BDivisionVar.Division.Label,
+			Value: BDivisionVar.Division.Value,
 		}
-		QuestionsVar = append(QuestionsVar, QuestionVar)
+		retr_stmt1, err := db.Query("Select basicQuestionId, basicQuestion, bSubTypeId from basicquestion where division = '" + BDivisionVar.Division.Value + "'")
+		commons.CheckErr(err)
+		for retr_stmt1.Next() {
+			var QuestionVar commons.BQuestion
+
+			err := retr_stmt1.Scan(&QuestionVar.BqId, &QuestionVar.BqText, &QuestionVar.BSubType)
+			commons.CheckErr(err)
+
+			QuestionVar = commons.BQuestion{
+				BSubType: QuestionVar.BSubType,
+				BqId:     QuestionVar.BqId,
+				BqText:   QuestionVar.BqText,
+				Answer:   " ",
+				AnswerId: " ",
+			}
+			QuestionsVar = append(QuestionsVar, QuestionVar)
+		}
+		BDivisionVar = commons.BDivision{
+			Division: division,
+			Ques:     QuestionsVar,
+		}
+
+		BDivisionsVar = append(BDivisionsVar, BDivisionVar)
+
 	}
 	BasicQuestionVar = commons.BasicQuestion{
 		RfpId:                " ",
 		RfpName:              " ",
 		TravelAgencyMasterId: " ",
-		Ques:                 QuestionsVar,
+		Division:             BDivisionsVar,
 	}
 	b, err := json.Marshal(BasicQuestionVar)
 	commons.CheckErr(err)
 	return string(b)
 }
 
-func RfpBasicAns(RfpBasicQ *commons.BasicQuestion) string {
+func RfpBasicAns(RfpBasicQ *commons.BasicQuestion) int64 {
 	db = GetDB()
-	var result string
-	insrtstmt, err := db.Prepare(`INSERT INTO rfpmaster SET rfpName = ?, travelAgencyMasterId = ?, clientTypeMasterId = ?, active = ?, completionStatus = ?, createDate = ?`)
-	commons.CheckErr(err)
-	createDate := time.Now()
-	fmt.Println("rfp.TravelAgencyMasterId", RfpBasicQ.TravelAgencyMasterId)
-	res, err := insrtstmt.Exec(RfpBasicQ.RfpName, RfpBasicQ.TravelAgencyMasterId, "4", "1", "0", createDate.String())
-	commons.CheckErr(err)
-	rfpid, err := res.LastInsertId()
-	count := 0
-	length := len(RfpBasicQ.Ques)
-	for i := range RfpBasicQ.Ques {
-		insrtstmt1, err := db.Prepare(`INSERT INTO basicrfpinfo SET rfpId = ?, travelAgencyMasterId = ?, basicQuestionId = ?, answer = ?, basicAnswerId = ?`)
+	var rfpid int64
+
+	if RfpBasicQ.RfpId == "" {
+		insrtstmt, err := db.Prepare(`INSERT INTO rfpmaster SET rfpName = ?, travelAgencyMasterId = ?, clientTypeMasterId = ?, active = ?, completionStatus = ?, createDate = ?`)
 		commons.CheckErr(err)
-		res1, err := insrtstmt1.Exec(rfpid, RfpBasicQ.TravelAgencyMasterId, RfpBasicQ.Ques[i].BqId, RfpBasicQ.Ques[i].Answer, RfpBasicQ.Ques[i].AnswerId)
+		createDate := time.Now()
+		fmt.Println("rfp.TravelAgencyMasterId", RfpBasicQ.TravelAgencyMasterId)
+		res, err := insrtstmt.Exec(RfpBasicQ.RfpName, RfpBasicQ.TravelAgencyMasterId, "4", "1", "0", createDate.String())
 		commons.CheckErr(err)
-		count++
-		fmt.Println(res1)
-	}
-	if count == length {
-		result = "all questions are saved"
+		rfpid, err = res.LastInsertId()
+		for i := range RfpBasicQ.Division {
+			for j := range RfpBasicQ.Division[i].Ques {
+				insrtstmt1, err := db.Prepare(`INSERT INTO basicrfpinfo SET rfpId = ?, travelAgencyMasterId = ?, basicQuestionId = ?, answer = ?, basicAnswerId = ?`)
+				commons.CheckErr(err)
+				res1, err := insrtstmt1.Exec(rfpid, RfpBasicQ.TravelAgencyMasterId, RfpBasicQ.Division[i].Ques[j].BqId, RfpBasicQ.Division[i].Ques[j].Answer, RfpBasicQ.Division[i].Ques[j].AnswerId)
+				commons.CheckErr(err)
+
+				fmt.Println(res1.LastInsertId)
+				fmt.Println("rfpid", string(rfpid))
+
+			}
+		}
+		fmt.Println("rfpid", rfpid)
+		return rfpid
 	} else {
-		result = "Failed to save some responses"
+		updatestmt, err := db.Prepare(`UPDATE rfpmaster SET rfpName = ?, travelAgencyMasterId = ?, clientTypeMasterId = ?, active = ?, completionStatus = ? where rfpId = '` + RfpBasicQ.RfpId + "'")
+		commons.CheckErr(err)
+		res1, err := updatestmt.Exec(RfpBasicQ.RfpName, RfpBasicQ.TravelAgencyMasterId, "4", "1", "0")
+		commons.CheckErr(err)
+		fmt.Println(res1)
+
+		count := 0
+		//length := len(RfpBasicQ.Ques)
+		for i := range RfpBasicQ.Division {
+			for j := range RfpBasicQ.Division[i].Ques {
+				if CheckDuplicateBasic(RfpBasicQ.RfpId, RfpBasicQ.Division[i].Ques[j].BqId) {
+					updatestmt, err := db.Prepare(`UPDATE basicrfpinfo SET basicQuestionId = ?, answer = ?, basicAnswerId = ? where rfpId = '` + RfpBasicQ.RfpId + "' and basicQuestionId = '" + RfpBasicQ.Division[i].Ques[j].BqId + "'")
+					commons.CheckErr(err)
+					res1, err := updatestmt.Exec(RfpBasicQ.Division[i].Ques[j].BqId, RfpBasicQ.Division[i].Ques[j].Answer, RfpBasicQ.Division[i].Ques[j].AnswerId)
+					commons.CheckErr(err)
+					count++
+					fmt.Println(res1, "updated")
+
+				} else {
+					insrtstmt1, err := db.Prepare(`INSERT INTO basicrfpinfo SET rfpId = ?, travelAgencyMasterId = ?, basicQuestionId = ?, answer = ?, basicAnswerId = ?`)
+					commons.CheckErr(err)
+					res1, err := insrtstmt1.Exec(rfpid, RfpBasicQ.TravelAgencyMasterId, RfpBasicQ.Division[i].Ques[j].BqId, RfpBasicQ.Division[i].Ques[j].Answer, RfpBasicQ.Division[i].Ques[j].AnswerId)
+					commons.CheckErr(err)
+					count++
+					fmt.Println(res1)
+				}
+			}
+		}
+		return 1
 	}
-	return result
+
+	//	result = "all questions are saved"
+
 }
 
 func RfpRequest(rfp *commons.Rfp) string {
@@ -509,14 +564,14 @@ func RfpRequest(rfp *commons.Rfp) string {
 		commons.CheckErr(err)
 		fmt.Println("rfp questions updated, id : ", rowid1)
 
-		for j := range rfp.Ques[i].Interests {
+		for j := range rfp.Ques[i].Answer {
 			//fmt.Println(".......", hres.Ans[i].QuestionId, hres.Ans[i].Answer[j].AnswerId, hres.Ans[i].Answer[j].Answer, hres.Ans[i].GroupQuestionId, hres.Ans[i].QuestionSubTypeId, hres.ClientTypeMasterId, hres.TravelAgencyMasterId)
 
-			fmt.Println(rfp.Ques[i].Interests[j])
+			fmt.Println(rfp.Ques[i].Answer[j])
 
 			insrtstmt2, err := db.Prepare(`INSERT INTO rfpquestionchoices SET rfpId = ?, rfpQuestionId = ?, answerMasterId = ?, groupQuestionId = ?`)
 			commons.CheckErr(err)
-			res2, err := insrtstmt2.Exec(rowid, rowid1, rfp.Ques[i].Interests[j].AnswerId, rfp.Ques[i].GroupQuestionId)
+			res2, err := insrtstmt2.Exec(rowid, rowid1, rfp.Ques[i].Answer[j].AnswerId, rfp.Ques[i].GroupQuestionId)
 			commons.CheckErr(err)
 			rowid2, err := res2.LastInsertId()
 			commons.CheckErr(err)
@@ -524,7 +579,7 @@ func RfpRequest(rfp *commons.Rfp) string {
 
 			insrtstmt3, err := db.Prepare(`INSERT INTO rfpchoicepriority SET rfpQuestionChoiceId = ?, rfpId = ?, priorityNumber = ?`)
 			commons.CheckErr(err)
-			res3, err := insrtstmt3.Exec(rowid2, rowid, rfp.Ques[i].Interests[j].Priority)
+			res3, err := insrtstmt3.Exec(rowid2, rowid, rfp.Ques[i].Answer[j].Priority)
 			commons.CheckErr(err)
 			rowid3, err := res3.LastInsertId()
 			commons.CheckErr(err)
@@ -552,7 +607,7 @@ func RfpRequest(rfp *commons.Rfp) string {
 		fmt.Println("rfp questions updated with customised question", rowid5)
 
 	}
-	return ""
+	return "Rfp created"
 }
 
 func RfpEditor(rfp *commons.Rfp) string {
@@ -580,14 +635,14 @@ func RfpEditor(rfp *commons.Rfp) string {
 			commons.CheckErr(err)
 			fmt.Println("rfp questions updated, id : ", rowid1)
 
-			for j := range rfp.Ques[i].Interests {
+			for j := range rfp.Ques[i].Answer {
 				//fmt.Println(".......", hres.Ans[i].QuestionId, hres.Ans[i].Answer[j].AnswerId, hres.Ans[i].Answer[j].Answer, hres.Ans[i].GroupQuestionId, hres.Ans[i].QuestionSubTypeId, hres.ClientTypeMasterId, hres.TravelAgencyMasterId)
 
-				fmt.Println(rfp.Ques[i].Interests[j])
+				fmt.Println(rfp.Ques[i].Answer[j])
 
 				insrtstmt2, err := db.Prepare(`INSERT INTO rfpquestionchoices SET rfpId = ?, rfpQuestionId = ?, answerMasterId = ?, groupQuestionId = ?`)
 				commons.CheckErr(err)
-				res2, err := insrtstmt2.Exec(rfpId, rowid1, rfp.Ques[i].Interests[j].AnswerId, rfp.Ques[i].GroupQuestionId)
+				res2, err := insrtstmt2.Exec(rfpId, rowid1, rfp.Ques[i].Answer[j].AnswerId, rfp.Ques[i].GroupQuestionId)
 				commons.CheckErr(err)
 				rowid2, err := res2.LastInsertId()
 				commons.CheckErr(err)
@@ -595,7 +650,7 @@ func RfpEditor(rfp *commons.Rfp) string {
 
 				insrtstmt3, err := db.Prepare(`INSERT INTO rfpchoicepriority SET rfpQuestionChoiceId = ?, rfpId = ?, priorityNumber = ?`)
 				commons.CheckErr(err)
-				res3, err := insrtstmt3.Exec(rowid2, rfpId, rfp.Ques[i].Interests[j].Priority)
+				res3, err := insrtstmt3.Exec(rowid2, rfpId, rfp.Ques[i].Answer[j].Priority)
 				commons.CheckErr(err)
 				rowid3, err := res3.LastInsertId()
 				commons.CheckErr(err)
@@ -639,6 +694,8 @@ func RfpEditor(rfp *commons.Rfp) string {
 	if rfp.Status == "1" {
 		fmt.Println("List Hotels as comapny want to send the rfp")
 		hotels = ListHotels("1")
+	} else {
+		hotels = "Rfp Saved as draft"
 	}
 
 	return hotels
@@ -681,6 +738,11 @@ func RfpSend(rfp *commons.RfpSend) string {
 		commons.CheckErr(err)
 		res, err := insrtstmt.Exec(rfp.RfpId, rfp.TravelAgencyMasterId, rfp.Hotels[i], "0", "0", "1")
 		fmt.Println(".....,,,,")
+		updatestmt, err := db.Prepare(`UPDATE rfpmaster SET completionStatus = ? where rfpId = '` + rfp.RfpId + "'")
+		commons.CheckErr(err)
+		res1, err := updatestmt.Exec("1")
+		commons.CheckErr(err)
+		fmt.Println(res1.LastInsertId)
 		commons.CheckErr(err)
 		fmt.Println(res.LastInsertId)
 	}
@@ -707,9 +769,9 @@ func GetRfp(RfpId string) string {
 		retr_stmt1, err := db.Query("Select answerMasterId from rfpquestionchoices where rfpQuestionId = '" + RfpQuestionId + "'")
 		commons.CheckErr(err)
 
-		var Interests []commons.Interest
+		var Answer []commons.Answers
 		for retr_stmt1.Next() {
-			var InterestVar commons.Interest
+			var InterestVar commons.Answers
 
 			err = retr_stmt1.Scan(&InterestVar.AnswerId)
 			commons.CheckErr(err)
@@ -717,18 +779,18 @@ func GetRfp(RfpId string) string {
 			err := db.QueryRow("Select answerText from answermaster where answerMasterId = '" + InterestVar.AnswerId + "'").Scan(&InterestVar.Answer)
 			commons.CheckErr(err)
 
-			InterestVar = commons.Interest{
+			InterestVar = commons.Answers{
 				AnswerId: InterestVar.AnswerId,
 				Answer:   InterestVar.Answer,
 			}
-			Interests = append(Interests, InterestVar)
+			Answer = append(Answer, InterestVar)
 		}
 
 		quesVar = commons.Ques{
 			QuestionId:      quesVar.QuestionId,
 			QuestionText:    quesVar.QuestionText,
 			GroupQuestionId: quesVar.GroupQuestionId,
-			Interests:       Interests,
+			Answer:          Answer,
 		}
 		questions = append(questions, quesVar)
 
@@ -743,10 +805,109 @@ func GetRfp(RfpId string) string {
 	return string(b)
 }
 
+func ListRfpPublished(travelAgencyMasterId string) string {
+	retr_stmt, err := db.Query("Select rfpId, travelAgencyMasterId from rfphotelmapping where hotelMasterId = '" + travelAgencyMasterId + "' where status = '1'")
+	commons.CheckErr(err)
+	//var Locations []commons.LabVal
+	for retr_stmt.Next() {
+	}
+
+	return ""
+}
+
+//=====================================================================================
+// **********************hotel(stage - 3)****************************
+//=====================================================================================
+
+func ListRfpByHotel(HotelId string) string {
+
+	db = GetDB()
+	retr_stmt, err := db.Query("Select rfpId, travelAgencyMasterId from rfphotelmapping where hotelMasterId = '" + HotelId + "' where status = '1'")
+	commons.CheckErr(err)
+	var rfpId, travelAgencyMasterId string
+	var RfpRecievedVar commons.RfpRecieved
+	var CompaniesVar commons.Companies
+	var Companies []commons.Companies
+	var Locations []commons.LabVal
+	for retr_stmt.Next() {
+		err := retr_stmt.Scan(&rfpId, &travelAgencyMasterId)
+		commons.CheckErr(err)
+		err = db.QueryRow("Select travelAgencyName from travelagencymaster where travelAgencyMasterId = '" + travelAgencyMasterId + "'").Scan(&CompaniesVar.Company.Value)
+		err = db.QueryRow("Select rfpName from rfpmaster where rfpId = '" + rfpId + "'").Scan(&CompaniesVar.Rfp.Value)
+		err = db.QueryRow("Select answer from basicrfpinfo where rfpId = '" + rfpId + "' and basicQuestionId = 8").Scan(&CompaniesVar.RoomsYear)
+		err = db.QueryRow("Select answer from basicrfpinfo where rfpId = '" + rfpId + "' and basicQuestionId = 7").Scan(&CompaniesVar.TravelPerYear)
+		err = db.QueryRow("Select answer from basicrfpinfo where rfpId = '" + rfpId + "' and basicQuestionId = 6").Scan(&CompaniesVar.TravelPerMonth)
+		fmt.Println("..////....")
+		retr_stmt1, err := db.Query("Select basicAnswerId from basicrfpinfo where rfpId = '" + rfpId + "' and basicQuestionId = 5")
+		fmt.Println("..////....")
+
+		for retr_stmt1.Next() {
+			var cityId, city string
+			fmt.Println("../\\///....")
+
+			err := retr_stmt1.Scan(&cityId)
+			commons.CheckErr(err)
+			fmt.Println(cityId)
+
+			fmt.Println("../\\///....")
+
+			fmt.Println(cityId + "......")
+			err = db.QueryRow("Select cityName from citymaster where cityMasterId = '" + cityId + "'").Scan(&city)
+			location := commons.LabVal{
+				Label: city,
+				Value: cityId,
+			}
+			Locations = append(Locations, location)
+
+		}
+		//need to work
+
+		company := commons.LabVal{
+			Label: CompaniesVar.Company.Value,
+			Value: travelAgencyMasterId,
+		}
+		rfp := commons.LabVal{
+			Label: CompaniesVar.Company.Value,
+			Value: CompaniesVar.Rfp.Value,
+		}
+
+		CompaniesVar = commons.Companies{
+			Company:         company,
+			Rfp:             rfp,
+			RoomsYear:       CompaniesVar.RoomsYear,
+			Location:        Locations,
+			ProposalMatched: "all",
+			TravelPerYear:   CompaniesVar.TravelPerYear,
+			TravelPerMonth:  CompaniesVar.TravelPerMonth,
+		}
+		Companies = append(Companies, CompaniesVar)
+
+	}
+	RfpRecievedVar = commons.RfpRecieved{
+		Comp: Companies,
+	}
+	b, err := json.Marshal(RfpRecievedVar)
+	commons.CheckErr(err)
+	return string(b)
+	return ""
+}
+
 func CheckDuplicate(tablename, columnname, rfpId, qId string) bool {
 	db = GetDB()
 	var columnvalue string
 	err := db.QueryRow("Select COUNT(" + columnname + ") from " + tablename + " where rfpId = '" + rfpId + "' and questionMasterId = '" + qId + "'").Scan(&columnvalue)
+	commons.CheckErr(err)
+	if columnvalue != "0" {
+		return true
+	} else {
+		return false
+	}
+}
+
+func CheckDuplicateBasic(RfpId, BqId string) bool {
+	db = GetDB()
+	var columnvalue string
+	err := db.QueryRow("Select COUNT(*) from basicrfpinfo where rfpId = '" + RfpId + "' and basicQuestionId = '" + BqId + "'").Scan(&columnvalue)
 	commons.CheckErr(err)
 	if columnvalue != "0" {
 		return true
@@ -772,8 +933,8 @@ func GetDB() *sql.DB {
 	//fmt.Println("I am inside db")
 	var err error
 	if db == nil {
-		//db, err = sql.Open("mysql", "root:@/company_policy?parseTime=true&charset=utf8")
-		db, err = sql.Open("mysql", "sriram:sriram123@tcp(127.0.0.1:3306)/hotnix_dev?parseTime=true&charset=utf8")
+		db, err = sql.Open("mysql", "root:@/company_policy?parseTime=true&charset=utf8")
+		//db, err = sql.Open("mysql", "sriram:sriram123@tcp(127.0.0.1:3306)/hotnix_dev?parseTime=true&charset=utf8")
 
 		commons.CheckErr(err)
 	}

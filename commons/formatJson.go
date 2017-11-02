@@ -92,7 +92,7 @@ type RfpQuesChoice struct {
 	QuestionMasterId string         `json:"questionMasterId,omitempty"`
 	GroupQuestionId  string         `json:"groupQuestionId,omitempty"`
 	IsMandatory      string         `json:"isMandatory,omitempty"`
-	Interests        []RfpAnsChoice `json:"interests,omitempty"`
+	Answer           []RfpAnsChoice `json:"answer,omitempty"`
 }
 
 //customized questions
@@ -129,12 +129,12 @@ type RfpView struct {
 	Ques  []Ques `json:"ques,omitempty"`
 }
 type Ques struct {
-	QuestionId      string     `json:"questionId,omitempty"`
-	QuestionText    string     `json:"questionText,omitempty"`
-	GroupQuestionId string     `json:"groupQuestionId,omitempty"`
-	Interests       []Interest `json:"interests,omitempty"`
+	QuestionId      string    `json:"questionId,omitempty"`
+	QuestionText    string    `json:"questionText,omitempty"`
+	GroupQuestionId string    `json:"groupQuestionId,omitempty"`
+	Answer          []Answers `json:"answer,omitempty"`
 }
-type Interest struct {
+type Answer struct {
 	Answer   string `json:"answer,omitempty"`
 	AnswerId string `json:"answerId,omitempty"`
 }
@@ -151,16 +151,40 @@ type BasicQuestion struct {
 	RfpId                string      `json:"rfpId,omitempty"`
 	RfpName              string      `json:"rfpName,omitempty"`
 	TravelAgencyMasterId string      `json:"travelAgencyMasterId,omitempty"`
-	Ques                 []BQuestion `json:"ques,omitempty"`
+	Division             []BDivision `json:"division,omitempty"`
 }
 
+type BDivision struct {
+	Division LabVal      `json:"divison,omitempty"`
+	Ques     []BQuestion `json:"ques,omitempty"`
+}
 type BQuestion struct {
 	BSubType string `json:"bSubType,omitempty"`
 	BqId     string `json:"bqId,omitempty"`
 	BqText   string `json:"bqText,omitempty"`
-	Divison  string `json:"divison,omitempty"`
 	Answer   string `json:"answer,omitempty"`
 	AnswerId string `json:"answerId,omitempty"`
+}
+
+//List Of rfp recieved by hotel
+type RfpRecieved struct {
+	Comp []Companies `json:"comp,omitempty"`
+}
+
+type LabVal struct {
+	Label string `json:"label,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
+//List of companies
+type Companies struct {
+	Company         LabVal   `json:"company,omitempty"`
+	Rfp             LabVal   `json:"rfp,omitempty"`
+	RoomsYear       string   `json:"roomsYear,omitempty"`
+	Location        []LabVal `json:"location,omitempty"`
+	ProposalMatched string   `json:"proposalMatched,omitempty"`
+	TravelPerYear   string   `json:"travelPerYear,omitempty"`
+	TravelPerMonth  string   `json:"travelPerMonth,omitempty"`
 }
 
 func UnmarshalRFPBasic(jsonStr string) *BasicQuestion {

@@ -57,6 +57,16 @@ func ListHotel(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func RfpPublished(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Listing Sent Rfp ......")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	travelAgencyMasterId := r.FormValue("travelAgencyMasterId")
+	//fmt.Println(rfpId)
+	a := db.ListRfpPublished(travelAgencyMasterId)
+	fmt.Fprintln(w, a)
+}
+
 func ListBasic(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Listing Basic question ......")
 	fmt.Fprintln(w, db.GetBasicList())
