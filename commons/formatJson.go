@@ -159,11 +159,11 @@ type BDivision struct {
 	Ques     []BQuestion `json:"ques,omitempty"`
 }
 type BQuestion struct {
-	BSubType string `json:"bSubType,omitempty"`
-	BqId     string `json:"bqId,omitempty"`
-	BqText   string `json:"bqText,omitempty"`
-	Answer   string `json:"answer,omitempty"`
-	AnswerId string `json:"answerId,omitempty"`
+	BSubType string   `json:"bSubType,omitempty"`
+	BqId     string   `json:"bqId,omitempty"`
+	BqText   string   `json:"bqText,omitempty"`
+	Answer   string   `json:"answer,omitempty"`
+	AnswerId []LabVal `json:"answerId,omitempty"`
 }
 
 //List Of rfp recieved by hotel
@@ -185,6 +185,21 @@ type Companies struct {
 	ProposalMatched string   `json:"proposalMatched,omitempty"`
 	TravelPerYear   string   `json:"travelPerYear,omitempty"`
 	TravelPerMonth  string   `json:"travelPerMonth,omitempty"`
+}
+
+type RfpSent struct { //by company
+	RfpList []CompRfpList `json:"rfpList,omitempty"`
+}
+
+type CompRfpList struct {
+	Rfp             LabVal   `json:"rfp,omitempty"`
+	RoomsYear       string   `json:"roomsYear,omitempty"`
+	Location        []LabVal `json:"location,omitempty"`
+	ProposalMatched string   `json:"proposalMatched,omitempty"`
+	TravelPerYear   string   `json:"travelPerYear,omitempty"`
+	TravelPerMonth  string   `json:"travelPerMonth,omitempty"`
+	SentHotelCount  string   `json:"sentHotelCount,omitempty"`
+	CreateDate      string   `json:"createDate,omitempty"`
 }
 
 func UnmarshalRFPBasic(jsonStr string) *BasicQuestion {
