@@ -213,6 +213,7 @@ type RfpDet struct {
 	MinPrice   string   `json:"minPrice,omitempty"`
 	NoOfHotels string   `json:"noOfHotels,omitempty"`
 	NoOfQuotes string   `json:"noOfQuotes,omitempty"`
+	Connected  string   `json:"connected,omitempty"`
 	Rfp        string   `json:"rfp,omitempty"`
 	RfpId      string   `json:"rfpId,omitempty"`
 }
@@ -234,6 +235,7 @@ type Hotel struct {
 	MaxPrice        string `json:"maxPrice,omitempty"`
 	MinPrice        string `json:"minPrice,omitempty"`
 	ProposalMatched string `json:"proposalMatched,omitempty"`
+	Status          string `json:"status,omitempty"`
 	RoomPerMonth    string `json:"roomPerMonth,omitempty"`
 }
 

@@ -1368,7 +1368,7 @@ func GetRfp(RfpId string) string {
 func ListRfpPublished(travelAgencyMasterId string) string {
 
 	db = GetDB()
-	retr_stmt, err := db.Query("Select rfpId, rfpName, createDate from rfpmaster where travelAgencyMasterId = '" + travelAgencyMasterId + "' and completionStatus = '1' || completionStatus = '2'")
+	retr_stmt, err := db.Query("Select rfpId, rfpName, createDate, completionStatus from rfpmaster where travelAgencyMasterId = '" + travelAgencyMasterId + "' and completionStatus > '0'")
 	commons.CheckErr(err)
 
 	var createDate string
@@ -1378,7 +1378,7 @@ func ListRfpPublished(travelAgencyMasterId string) string {
 	var LabValVar commons.LabVal
 	var LabValsVar []commons.LabVal
 	for retr_stmt.Next() {
-		err := retr_stmt.Scan(&RfpDetVar.RfpId, &RfpDetVar.Rfp, &createDate)
+		err := retr_stmt.Scan(&RfpDetVar.RfpId, &RfpDetVar.Rfp, &createDate, &RfpDetVar.Connected)
 		commons.CheckErr(err)
 
 		err = db.QueryRow("Select COUNT(hotelMasterId) from rfphotelmapping where rfpId = '" + RfpDetVar.RfpId + "'").Scan(&RfpDetVar.NoOfHotels)
@@ -1393,11 +1393,17 @@ func ListRfpPublished(travelAgencyMasterId string) string {
 			}
 			LabValsVar = append(LabValsVar, LabValVar)
 		}
+		if RfpDetVar.Connected == "3" {
+			RfpDetVar.Connected = "connected"
+		} else {
+			RfpDetVar.Connected = "pending"
+		}
 		RfpDetVar = commons.RfpDet{
 			Location:   LabValsVar,
 			MinPrice:   "",
 			NoOfHotels: RfpDetVar.NoOfHotels,
 			NoOfQuotes: RfpDetVar.NoOfQuotes,
+			Connected:  RfpDetVar.Connected,
 			Rfp:        RfpDetVar.Rfp,
 			RfpId:      RfpDetVar.RfpId,
 		}
@@ -1421,15 +1427,21 @@ func ListRfpQuotes(rfpId string) string {
 	commons.CheckErr(err)
 	err = db.QueryRow("Select answer from basicrfpinfo where rfpId = '" + rfpId + "' and basicQuestionId = 13").Scan(&HotelVar.RoomPerMonth)
 	commons.CheckErr(err)
-	retr_stmt, err := db.Query("Select hotelMasterId from rfphotelmapping where rfpId = '" + rfpId + "' and slabId != '0'")
+	retr_stmt, err := db.Query("Select hotelMasterId, accepted from rfphotelmapping where rfpId = '" + rfpId + "' and slabId != '0'")
 	commons.CheckErr(err)
 
 	for retr_stmt.Next() {
-		err := retr_stmt.Scan(&HotelVar.HotelId)
+		err := retr_stmt.Scan(&HotelVar.HotelId, &HotelVar.Status)
 		commons.CheckErr(err)
 		var cityId string
 		err = db.QueryRow("Select hotelName, cityMasterId from hotelsmaster where hotelsMasterId = '"+HotelVar.HotelId+"'").Scan(&HotelVar.Hotel, cityId)
 		err = db.QueryRow("Select cityName from citymaster where cityMasterId = '" + cityId + "'").Scan(&HotelVar.Location)
+
+		if HotelVar.Status == "1" {
+			HotelVar.Status = "accepted"
+		} else {
+			HotelVar.Status = "rejected"
+		}
 
 		HotelVar = commons.Hotel{
 			Hotel:           HotelVar.Hotel,
@@ -1438,6 +1450,7 @@ func ListRfpQuotes(rfpId string) string {
 			MaxPrice:        "677777",
 			MinPrice:        "9999",
 			ProposalMatched: "all",
+			Status:          HotelVar.Status,
 			RoomPerMonth:    HotelVar.RoomPerMonth,
 		}
 		HotelsVar = append(HotelsVar, HotelVar)
@@ -1489,7 +1502,7 @@ func AcceptQuote(RfpId, HotelId string) string {
 func ListRfpByHotel(HotelId string) string {
 
 	db = GetDB()
-	retr_stmt, err := db.Query("Select rfpId, travelAgencyMasterId, accepted, slabId from rfphotelmapping where hotelMasterId = '" + HotelId + "' where status = '1'")
+	retr_stmt, err := db.Query("Select rfpId, travelAgencyMasterId, accepted, slabId from rfphotelmapping where hotelMasterId = '" + HotelId + "' and status = '1'")
 	commons.CheckErr(err)
 
 	var rfpId, travelAgencyMasterId, slabId string
@@ -1677,7 +1690,7 @@ func GetDB() *sql.DB {
 	var err error
 	if db == nil {
 		db, err = sql.Open("mysql", "root:@/company_policy?parseTime=true&charset=utf8")
-		//db, err = sql.Open("mysql", "sriram:sriram123@tcp(127.0.0.1:3306)/hotnix_dev?parseTime=true&charset=utf8")
+		//	db, err = sql.Open("mysql", "sriram:sriram123@tcp(127.0.0.1:3306)/hotnix_dev?parseTime=true&charset=utf8")
 
 		commons.CheckErr(err)
 	}
