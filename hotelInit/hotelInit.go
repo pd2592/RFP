@@ -63,6 +63,28 @@ func RfpRecieved(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, db.ListRfpByHotel(hotelId))
 }
 
+func ListSlab(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Listing Slabs.......")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	hotelId := r.FormValue("hotelId")
+	//fmt.Println(rfpId)
+	a := db.ListSlabs(hotelId)
+	fmt.Fprintln(w, a)
+}
+
+func AssignSlab(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Sending Quote for RFP.....")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	hotelId := r.FormValue("hotelId")
+	slabId := r.FormValue("slabId")
+	rfpId := r.FormValue("rfpId")
+
+	fmt.Fprintf(w, db.SendQuote(hotelId, slabId, rfpId))
+
+}
+
 // body, err := ioutil.ReadAll(r.Body)
 // commons.CheckErr(err)
 // Question := commons.UnmarshalQuestion(string(body))

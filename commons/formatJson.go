@@ -89,10 +89,10 @@ type RfpAnsChoice struct {
 
 //rfp question choices, table : rfpQuestions
 type RfpQuesChoice struct {
-	QuestionMasterId string         `json:"questionMasterId,omitempty"`
-	GroupQuestionId  string         `json:"groupQuestionId,omitempty"`
-	IsMandatory      string         `json:"isMandatory,omitempty"`
-	Answer           []RfpAnsChoice `json:"answer,omitempty"`
+	QuestionId      string         `json:"questionId,omitempty"`
+	GroupQuestionId string         `json:"groupQuestionId,omitempty"`
+	IsMandatory     string         `json:"isMandatory,omitempty"`
+	Answer          []RfpAnsChoice `json:"answer,omitempty"`
 }
 
 //customized questions
@@ -200,6 +200,45 @@ type CompRfpList struct {
 	TravelPerMonth  string   `json:"travelPerMonth,omitempty"`
 	SentHotelCount  string   `json:"sentHotelCount,omitempty"`
 	CreateDate      string   `json:"createDate,omitempty"`
+}
+
+type RfpPublished struct {
+	RfpDets              []RfpDet `json:"rfp,omitempty"`
+	TravelAgencyMasterId string   `json:"travelAgencyMasterId,omitempty"`
+}
+
+type RfpDet struct {
+	Location   []LabVal `json:"location,omitempty"`
+	MinPrice   string   `json:"minPrice,omitempty"`
+	NoOfHotels string   `json:"noOfHotels,omitempty"`
+	NoOfQuotes string   `json:"noOfQuotes,omitempty"`
+	Rfp        string   `json:"rfp,omitempty"`
+	RfpId      string   `json:"rfpId,omitempty"`
+}
+
+type RfpData struct {
+	RfpId   string `json:"rfpId,omitempty"`
+	RfpName string `json:"rfpName,omitempty"`
+}
+
+type ListQuotes struct {
+	RfpId   string  `json:"rfpId,omitempty"`
+	RfpName string  `json:"rfpName,omitempty"`
+	Hotels  []Hotel `json:"hotels,omitempty"`
+}
+type Hotel struct {
+	Hotel           string `json:"hotel,omitempty"`
+	HotelId         string `json:"hotelId,omitempty"`
+	Location        string `json:"location,omitempty"`
+	MaxPrice        string `json:"maxPrice,omitempty"`
+	MinPrice        string `json:"minPrice,omitempty"`
+	ProposalMatched string `json:"proposalMatched,omitempty"`
+	RoomPerMonth    string `json:"roomPerMonth,omitempty"`
+}
+
+type RfpFullView struct {
+	Basic   []BDivision `json:"basic,omitempty"`
+	RfpQues []ParentCat `json:"rfpQues,omitempty"`
 }
 
 func UnmarshalRFPBasic(jsonStr string) *BasicQuestion {

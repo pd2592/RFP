@@ -27,6 +27,19 @@ func RfpEdit(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, db.RfpEditor(RfpEdits))
 }
 
+func GetRfp(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Get some question for Hotels !!!!")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	questionCategoryParent := r.FormValue("questionCategoryParent")
+	travelAgencyMasterId := r.FormValue("travelAgencyMasterId")
+	rfpId := r.FormValue("rfpId")
+
+	//fmt.Fprintf(w, db.HotelEditResponse(questionCategoryParent, travelAgencyMasterId))
+	fmt.Fprintf(w, db.CompanyEditRfp(rfpId, questionCategoryParent, travelAgencyMasterId))
+
+}
+
 func RfpPreview(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Previewing RFP ......")
 	err := r.ParseForm()
@@ -44,6 +57,14 @@ func RfpSend(w http.ResponseWriter, r *http.Request) {
 
 	//fmt.Println(db.HotelResponse(RfpQues))
 	fmt.Fprintln(w, db.RfpSend(RfpSent))
+}
+
+func RfpView(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("View RFP ......")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	RfpId := r.FormValue("rfpId")
+	fmt.Fprintf(w, db.RfpFullView(RfpId))
 }
 
 func ListHotel(w http.ResponseWriter, r *http.Request) {
@@ -65,6 +86,26 @@ func RfpPublished(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println(rfpId)
 	a := db.ListRfpPublished(travelAgencyMasterId)
 	fmt.Fprintln(w, a)
+}
+
+func RfpQuotes(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Listing Quotes Recieved for Rfp ......")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	rfpId := r.FormValue("rfpId")
+	//fmt.Println(rfpId)
+	a := db.ListRfpQuotes(rfpId)
+	fmt.Fprintln(w, a)
+}
+
+func RfpHotelResponse(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Previewing RFP ......")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	RfpId := r.FormValue("rfpId")
+	HotelId := r.FormValue("hotelId")
+
+	fmt.Fprintf(w, db.GetRfpResponse(RfpId, HotelId))
 }
 
 func ListBasic(w http.ResponseWriter, r *http.Request) {
