@@ -31,7 +31,7 @@ type QuesM struct {
 type QuestionCat struct {
 	QuestionCategoryId string  `json:"questionCategoryId,omitempty"`
 	QuestionCategory   string  `json:"questionCategory,omitempty"`
-	Ques               []QuesM `json:"ques,omitempty"`
+	Ques               []QuesM `json:"ques"`
 }
 
 //getting questions category wise
@@ -40,7 +40,7 @@ type ParentCat struct {
 	TravelAgencyMasterId     string        `json:"travelAgencyMasterId,omitempty"`
 	QuestionCategoryParentId string        `json:"questionCategoryParentId,omitempty"`
 	QuestionCategoryParent   string        `json:"questionCategoryParent,omitempty"`
-	QuesCategory             []QuestionCat `json:"quesCategory,omitempty"`
+	QuesCategory             []QuestionCat `json:"quesCategory"`
 }
 
 //getting question sub category wise
@@ -49,7 +49,7 @@ type ParentSubCat struct {
 	QuestionCategoryParent   string  `json:"questionCategoryParent,omitempty"`
 	QuestionCategoryId       string  `json:"questionCategoryId,omitempty"`
 	QuestionCategory         string  `json:"questionCategory,omitempty"`
-	Ques                     []QuesM `json:"ques,omitempty,omitempty"`
+	Ques                     []QuesM `json:"ques,omitempty"`
 }
 
 //store answer
@@ -180,6 +180,7 @@ type LabVal struct {
 type Companies struct {
 	Company         LabVal   `json:"company,omitempty"`
 	Rfp             LabVal   `json:"rfp,omitempty"`
+	Status          string   `json:"status,omitempty"`
 	RoomsYear       string   `json:"roomsYear,omitempty"`
 	Location        []LabVal `json:"location,omitempty"`
 	ProposalMatched string   `json:"proposalMatched,omitempty"`

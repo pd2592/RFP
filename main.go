@@ -35,6 +35,7 @@ func main() {
 	router.HandleFunc("/rfp/published", companyInit.RfpPublished)    //listing rfp which are sent by corporate
 	router.HandleFunc("/rfp/quotes", companyInit.RfpQuotes)          // listing rfps for which quotes are recieved
 	router.HandleFunc("/rfp/hotelRes", companyInit.RfpHotelResponse) //hotel response for particular rfp
+	router.HandleFunc("/rfp/acceptQuote", companyInit.AcceptQuote)
 
 	//hotelInit.SayHi("atddds")
 	log.Fatal(http.ListenAndServe(":9000", router))

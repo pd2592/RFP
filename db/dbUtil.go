@@ -1032,7 +1032,7 @@ func RfpFullView(RfpId string) string {
 
 		var parentCatVar commons.ParentCat
 		var questionCatVar commons.QuestionCat
-		var questionCatVars []commons.QuestionCat
+		questionCatVars := make([]commons.QuestionCat, 0)
 		var groupQuestionVar commons.GroupQuestion
 
 		var quesMVar commons.QuesM
@@ -1050,7 +1050,7 @@ func RfpFullView(RfpId string) string {
 			err := retr_stmt8.Scan(&parentCatVar.QuestionCategoryParentId, &questionCatVar.QuestionCategoryId, &questionCatVar.QuestionCategory)
 			commons.CheckErr(err)
 
-			var quesMVars []commons.QuesM
+			quesMVars := make([]commons.QuesM, 0)
 
 			retr_stmt1, err := db.Query("Select questionMasterId, questionText, groupQuestionId, questionSubTypeId from questionmaster where questionCategoryId = '" + questionCatVar.QuestionCategoryId + "'")
 			for retr_stmt1.Next() {
@@ -1204,7 +1204,7 @@ func GetRfpResponse(RfpId, HotelId string) string {
 
 		var parentCatVar commons.ParentCat
 		var questionCatVar commons.QuestionCat
-		var questionCatVars []commons.QuestionCat
+		questionCatVars := make([]commons.QuestionCat, 0)
 		var groupQuestionVar commons.GroupQuestion
 
 		var quesMVar commons.QuesM
@@ -1222,7 +1222,7 @@ func GetRfpResponse(RfpId, HotelId string) string {
 			err := retr_stmt8.Scan(&parentCatVar.QuestionCategoryParentId, &questionCatVar.QuestionCategoryId, &questionCatVar.QuestionCategory)
 			commons.CheckErr(err)
 
-			var quesMVars []commons.QuesM
+			quesMVars := make([]commons.QuesM, 0)
 
 			retr_stmt1, err := db.Query("Select questionMasterId, questionText, groupQuestionId, questionSubTypeId from questionmaster where questionCategoryId = '" + questionCatVar.QuestionCategoryId + "'")
 			for retr_stmt1.Next() {
@@ -1252,17 +1252,16 @@ func GetRfpResponse(RfpId, HotelId string) string {
 						groupQuestionVars = append(groupQuestionVars, groupQuestionVar)
 					}
 				}
-
 				err = db.QueryRow("select rfpQuestionId from rfpquestion where questionMasterId = '" + quesMVar.QuestionId + "' and rfpId = '" + RfpId + "'").Scan(&temp)
 				if len(temp) != 0 {
 					fmt.Println("temp ", temp, quesMVar.QuestionId, RfpId)
-					retr_stmt4, err := db.Query("Select answerMasterId from rfpquestionchoices where rfpQuestionId = '" + temp + "'")
+					retr_stmt4, err := db.Query("Select answer, answerId from clientanswer where questionMasterId = '" + quesMVar.QuestionId + "' and travelAgencyMasterId = '" + HotelId + "'  and groupQuestionId = '0'")
 					commons.CheckErr(err)
 					for retr_stmt4.Next() {
-						err := retr_stmt4.Scan(&answersVar.AnswerId)
+						err := retr_stmt4.Scan(&answersVar.Answer, &answersVar.AnswerId)
 						fmt.Println("answersVar.AnswerId", answersVar.AnswerId)
 						commons.CheckErr(err)
-						err = db.QueryRow("Select answerText from answermaster where answerMasterId = '" + answersVar.AnswerId + "'").Scan(&answersVar.Answer)
+						//	err = db.QueryRow("Select answerText from answermaster where answerMasterId = '" + answersVar.AnswerId + "'").Scan(&answersVar.Answer)
 						answersVar = commons.Answers{
 							AnswerId:              answersVar.AnswerId,
 							Answer:                answersVar.Answer,
@@ -1455,6 +1454,34 @@ func ListRfpQuotes(rfpId string) string {
 	return string(b)
 }
 
+func AcceptQuote(RfpId, HotelId string) string {
+	db = GetDB()
+
+	updatestmt, err := db.Prepare(`UPDATE rfphotelmapping SET accepted = ? where rfpId = '` + RfpId + "' and hotelMasterId = '" + HotelId + "'")
+	commons.CheckErr(err)
+	res, err := updatestmt.Exec("1")
+	commons.CheckErr(err)
+	fmt.Println(res)
+
+	updatestmt, err = db.Prepare(`UPDATE rfpmaster SET completionStatus = ? where rfpId = '` + RfpId + "'")
+	commons.CheckErr(err)
+	res, err = updatestmt.Exec("3")
+	commons.CheckErr(err)
+	fmt.Println(res)
+
+	var travelAgencyMasterId string
+	err = db.QueryRow("Select travelAgencyMasterId from rfpmaster where rfpId = '" + RfpId + "'").Scan(&travelAgencyMasterId)
+	commons.CheckErr(err)
+
+	updatestmt, err = db.Prepare(`UPDATE hoteltravelagents SET approved = ? where hotelsMasterId = '` + HotelId + "' and travelAgencyMasterId = '" + travelAgencyMasterId + "'")
+	commons.CheckErr(err)
+	res, err = updatestmt.Exec("1")
+	commons.CheckErr(err)
+	fmt.Println(res)
+
+	return "true"
+}
+
 //=====================================================================================
 // **********************hotel(stage - 3)****************************
 //=====================================================================================
@@ -1462,16 +1489,19 @@ func ListRfpQuotes(rfpId string) string {
 func ListRfpByHotel(HotelId string) string {
 
 	db = GetDB()
-	retr_stmt, err := db.Query("Select rfpId, travelAgencyMasterId from rfphotelmapping where hotelMasterId = '" + HotelId + "' where status = '1'")
+	retr_stmt, err := db.Query("Select rfpId, travelAgencyMasterId, accepted, slabId from rfphotelmapping where hotelMasterId = '" + HotelId + "' where status = '1'")
 	commons.CheckErr(err)
-	var rfpId, travelAgencyMasterId string
+
+	var rfpId, travelAgencyMasterId, slabId string
 	var RfpRecievedVar commons.RfpRecieved
 	var CompaniesVar commons.Companies
 	var Companies []commons.Companies
 	var Locations []commons.LabVal
 	for retr_stmt.Next() {
-		err := retr_stmt.Scan(&rfpId, &travelAgencyMasterId)
+		err := retr_stmt.Scan(&rfpId, &travelAgencyMasterId, &CompaniesVar.Status, slabId)
 		commons.CheckErr(err)
+		var completion string
+		err = db.QueryRow("Select completionStatus from rfpmaster where rfpId = '" + rfpId + "'").Scan(&completion)
 		err = db.QueryRow("Select travelAgencyName from travelagencymaster where travelAgencyMasterId = '" + travelAgencyMasterId + "'").Scan(&CompaniesVar.Company.Value)
 		err = db.QueryRow("Select rfpName from rfpmaster where rfpId = '" + rfpId + "'").Scan(&CompaniesVar.Rfp.Value)
 		err = db.QueryRow("Select answer from basicrfpinfo where rfpId = '" + rfpId + "' and basicQuestionId = 8").Scan(&CompaniesVar.RoomsYear)
@@ -1511,9 +1541,20 @@ func ListRfpByHotel(HotelId string) string {
 			Value: CompaniesVar.Rfp.Value,
 		}
 
+		if completion == "3" && CompaniesVar.Status == "1" {
+			CompaniesVar.Status = "accepted"
+		} else if completion == "3" && CompaniesVar.Status == "0" {
+			CompaniesVar.Status = "closed"
+		} else if completion != "3" && slabId != "0" && CompaniesVar.Status == "0" {
+			CompaniesVar.Status = "quoted"
+		} else if completion != "3" && slabId == "0" && CompaniesVar.Status == "0" {
+			CompaniesVar.Status = "pending"
+		}
+
 		CompaniesVar = commons.Companies{
 			Company:         company,
 			Rfp:             rfp,
+			Status:          CompaniesVar.Status,
 			RoomsYear:       CompaniesVar.RoomsYear,
 			Location:        Locations,
 			ProposalMatched: "all",
@@ -1559,6 +1600,24 @@ func SendQuote(hotelId, slabId, rfpId string) string {
 	commons.CheckErr(err)
 	res, err := updatestmt.Exec(slabId, "1")
 	commons.CheckErr(err)
+	var travelAgencyMasterId string
+	err = db.QueryRow("Select travelAgencyMasterId from rfpmaster where rfpId = '" + rfpId + "'").Scan(&travelAgencyMasterId)
+	id := CheckExistence("hoteltravelagents", "hotelTravelAgentsId", []string{"hotelsMasterId", "travelAgencyMasterId"}, []string{hotelId, travelAgencyMasterId})
+	if id != "0" {
+		updatestmt2, err := db.Prepare(`UPDATE hoteltravelagents SET hotelTariffSlabsId = ?, approved = ? where hotelsMasterId = '` + hotelId + "' and travelAgencyMasterId = '" + travelAgencyMasterId + "'")
+		commons.CheckErr(err)
+		res2, err := updatestmt2.Exec(id, "0")
+		commons.CheckErr(err)
+		fmt.Println(res2)
+	} else {
+		insrtstmt, err := db.Prepare(`INSERT INTO hoteltravelagents SET hotelsMasterId = ?, hotelTariffSlabsId = ?, travelAgencyMasterId = ?, approved = ?`)
+		commons.CheckErr(err)
+		res, err := insrtstmt.Exec(hotelId, slabId, travelAgencyMasterId, "0")
+		commons.CheckErr(err)
+		fmt.Println(res)
+
+	}
+
 	updatestmt1, err := db.Prepare(`UPDATE rfpmaster SET completionStatus = ? where rfpId = '` + rfpId + "'")
 	commons.CheckErr(err)
 	res1, err := updatestmt1.Exec("2")
@@ -1590,6 +1649,14 @@ func CheckDuplicateBasic(RfpId, BqId string) bool {
 	} else {
 		return false
 	}
+}
+
+func CheckExistence(table, hotelTravelAgentsId string, column, value []string) string {
+	db = GetDB()
+	id := "0"
+	err := db.QueryRow("Select " + hotelTravelAgentsId + " from " + table + commons.CreateCondStr(column, value)).Scan(&id)
+	commons.CheckErr(err)
+	return id
 }
 
 func CheckHotelAnswers(questionMasterId, travelAgencyMasterId, groupQuestionId string) bool {

@@ -99,13 +99,23 @@ func RfpQuotes(w http.ResponseWriter, r *http.Request) {
 }
 
 func RfpHotelResponse(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Previewing RFP ......")
+	fmt.Println("Hotels Response for RFP ......")
 	err := r.ParseForm()
 	commons.CheckErr(err)
 	RfpId := r.FormValue("rfpId")
 	HotelId := r.FormValue("hotelId")
 
 	fmt.Fprintf(w, db.GetRfpResponse(RfpId, HotelId))
+}
+
+func AcceptQuote(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Hotels Response for RFP ......")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	RfpId := r.FormValue("rfpId")
+	HotelId := r.FormValue("hotelId")
+
+	fmt.Fprintf(w, db.AcceptQuote(RfpId, HotelId))
 }
 
 func ListBasic(w http.ResponseWriter, r *http.Request) {
