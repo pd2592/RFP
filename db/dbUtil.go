@@ -896,7 +896,8 @@ func RfpEditor(rfp *commons.Rfp) string {
 
 	if rfp.Status == "1" {
 		fmt.Println("List Hotels as comapny want to send the rfp")
-		hotels = ListHotels("1")
+		cities := GetCity(rfp.RfpId)
+		hotels = ListHotels(cities)
 	} else {
 		hotels = "Rfp Saved as draft"
 	}
@@ -904,29 +905,46 @@ func RfpEditor(rfp *commons.Rfp) string {
 	return hotels
 }
 
-func ListHotels(CityId string) string {
+func GetCity(rfpId string) []string {
+
+	db = GetDB()
+	retr_stmt, err := db.Query("Select basicAnswerId from basicrfpinfo where rfpId = '" + rfpId + "' and basicQuestionId = 5")
+	commons.CheckErr(err)
+	var s []string
+	var s1 string
+	for retr_stmt.Next() {
+		err = retr_stmt.Scan(&s1)
+		s = append(s, s1)
+	}
+	fmt.Println(s)
+	return s
+}
+
+func ListHotels(Cities []string) string {
 	db = GetDB()
 	fmt.Println("hotels...")
-	var ListHotelVar commons.ListHotel
 	var ListHotelsVar []commons.ListHotel
-
-	retr_stmt, err := db.Query("Select hotelsMasterId, hotelName, rstarRating, cityLocalityId, cityMasterId, distanceFromCity from hotelsmaster where cityMasterId = '" + CityId + "'")
-	commons.CheckErr(err)
-
-	for retr_stmt.Next() {
-		//var quesVar commons.Ques
-		err = retr_stmt.Scan(&ListHotelVar.HotelId, &ListHotelVar.HotelName, &ListHotelVar.Star, &ListHotelVar.Locality, &ListHotelVar.City, &ListHotelVar.DistanceFromCity)
+	for i := range Cities {
+		retr_stmt, err := db.Query("Select hotelsMasterId, hotelName, rstarRating, cityLocalityId, cityMasterId, distanceFromCity from hotelsmaster where cityMasterId = '" + Cities[i] + "'")
 		commons.CheckErr(err)
-		ListHotelVar = commons.ListHotel{
-			HotelName:        ListHotelVar.HotelName,
-			HotelId:          ListHotelVar.HotelId,
-			Star:             ListHotelVar.Star,
-			Locality:         ListHotelVar.Locality,
-			City:             ListHotelVar.City,
-			DistanceFromCity: ListHotelVar.DistanceFromCity,
+		var ListHotelVar commons.ListHotel
+
+		for retr_stmt.Next() {
+			//var quesVar commons.Ques
+			err = retr_stmt.Scan(&ListHotelVar.HotelId, &ListHotelVar.HotelName, &ListHotelVar.Star, &ListHotelVar.Locality, &ListHotelVar.City, &ListHotelVar.DistanceFromCity)
+			commons.CheckErr(err)
+			ListHotelVar = commons.ListHotel{
+				HotelName:        ListHotelVar.HotelName,
+				HotelId:          ListHotelVar.HotelId,
+				Star:             ListHotelVar.Star,
+				Locality:         ListHotelVar.Locality,
+				City:             ListHotelVar.City,
+				DistanceFromCity: ListHotelVar.DistanceFromCity,
+			}
+			ListHotelsVar = append(ListHotelsVar, ListHotelVar)
 		}
-		ListHotelsVar = append(ListHotelsVar, ListHotelVar)
 	}
+
 	b, err := json.Marshal(ListHotelsVar)
 	commons.CheckErr(err)
 	return string(b)

@@ -69,12 +69,12 @@ func RfpView(w http.ResponseWriter, r *http.Request) {
 
 func ListHotel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Listing Hotels ......")
-	err := r.ParseForm()
-	commons.CheckErr(err)
-	cityId := r.FormValue("cityId")
+	// err := r.ParseForm()
+	// commons.CheckErr(err)
+	// cityId := r.FormValue("cityId")
 	//fmt.Println(rfpId)
-	a := db.ListHotels(cityId)
-	fmt.Fprintln(w, a)
+	//a := db.ListHotels(cityId)   //need to send array of cityId
+	//fmt.Fprintln(w, a)
 
 }
 
