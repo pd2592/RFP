@@ -24,7 +24,7 @@ type QuesM struct {
 	IsMandatory         string          `json:"isMandatory,omitempty"`
 	TabColumn           []GroupQuestion `json:"tabColumn,omitempty"`
 	ConcatAns           []AnsM          `json:"concatAns,omitempty"`
-	Answer              []Answers       `json:"answer,omitempty"`
+	Answer              []Answers       `json:"answer"`
 }
 
 //store questions details
@@ -54,8 +54,8 @@ type ParentSubCat struct {
 
 //store answer
 type Answers struct {
-	AnswerId              string `json:"answerId,omitempty"`
-	Answer                string `json:"answer,omitempty"`
+	AnswerId              string `json:"answerId"`
+	Answer                string `json:"answer"`
 	Priority              string `json:"priority,omitempty"`
 	QuestionSubTypeId     string `json:"questionSubTypeId,omitempty"`
 	GroupQuestionMasterId string `json:"groupQuestionMasterId,omitempty"`
@@ -162,8 +162,8 @@ type BQuestion struct {
 	BSubType string   `json:"bSubType,omitempty"`
 	BqId     string   `json:"bqId,omitempty"`
 	BqText   string   `json:"bqText,omitempty"`
-	Answer   string   `json:"answer,omitempty"`
-	AnswerId []LabVal `json:"answerId,omitempty"`
+	Answer   string   `json:"answer"`
+	AnswerId []LabVal `json:"answerId"`
 }
 
 //List Of rfp recieved by hotel
@@ -216,6 +216,22 @@ type RfpDet struct {
 	Connected  string   `json:"connected,omitempty"`
 	Rfp        string   `json:"rfp,omitempty"`
 	RfpId      string   `json:"rfpId,omitempty"`
+}
+
+type HotelInfo struct {
+	HotelId        string `json:"hotelId,omitempty"`
+	HotelName      string `json:"hotelName,omitempty"`
+	Address        string `json:"address,omitempty"`
+	State          string `json:"state,omitempty"`
+	City           string `json:"city,omitempty"`
+	Locality       string `json:"locality,omitempty"`
+	PrimaryPhone   string `json:"primaryPhone,omitempty"`
+	SecondaryPhone string `json:"secondaryPhonerfpId,omitempty"`
+	PrimaryMail    string `json:"primaryMail,omitempty"`
+	SecondaryMail  string `json:"secondaryMail,omitempty"`
+	Web            string `json:"web,omitempty"`
+	CheckIn        string `json:"checkIn,omitempty"`
+	CheckOut       string `json:"checkOutrfpId,omitempty"`
 }
 
 type RfpData struct {

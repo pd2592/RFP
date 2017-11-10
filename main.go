@@ -18,9 +18,10 @@ func main() {
 	router.HandleFunc("/ansHotel/edit", hotelInit.EditHotelAns) //editing hotels answers
 	router.HandleFunc("/category/get", hotelInit.GetParentCategory)
 
-	router.HandleFunc("/rfp/recieved", hotelInit.RfpRecieved) //rfp recived by hotel
-	router.HandleFunc("/slab/list", hotelInit.ListSlab)       //list slab available for that hotel
-	router.HandleFunc("/slab/assign", hotelInit.AssignSlab)   //assign one slab for one rfp
+	router.HandleFunc("/rfp/recieved", hotelInit.RfpRecieved)      //rfp recived by hotel
+	router.HandleFunc("/slab/list", hotelInit.ListSlab)            //list slab available for that hotel
+	router.HandleFunc("/slab/assign", hotelInit.AssignSlab)        //assign one slab for one rfp
+	router.HandleFunc("/hotel/getDetails", hotelInit.HotelDetails) //get hotel details for review
 
 	router.HandleFunc("/basic/list", companyInit.ListBasic) //listing basic question, common for all corporates
 	router.HandleFunc("/basic/ans", companyInit.RfpBasic)   //answering basic ques and also creating rfp

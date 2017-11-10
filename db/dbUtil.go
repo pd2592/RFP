@@ -97,6 +97,13 @@ func QuestionJsonByCat(parentId string) string {
 					groupQuestionVars = append(groupQuestionVars, groupQuestionVar)
 				}
 			}
+			answer := commons.Answers{
+				AnswerId: "",
+				Answer:   "",
+			}
+			var answers []commons.Answers
+			answers = append(answers, answer)
+
 			quesMVar = commons.QuesM{
 				QuestionId:        quesMVar.QuestionId,
 				QuestionText:      quesMVar.QuestionText,
@@ -105,7 +112,7 @@ func QuestionJsonByCat(parentId string) string {
 				IsMandatory:       quesMVar.IsMandatory,
 				TabColumn:         groupQuestionVars,
 				ConcatAns:         ansMVars,
-				Answer:            nil,
+				Answer:            answers,
 			}
 			quesMVars = append(quesMVars, quesMVar)
 
@@ -429,6 +436,7 @@ func GetBasicList() string {
 	var BDivisionsVar []commons.BDivision
 	retr_stmt, err := db.Query("Select division, divisionName from basicquestion GROUP BY division")
 	commons.CheckErr(err)
+	//	answerId := make([]commons.LabVal, 0)
 
 	for retr_stmt.Next() {
 		var division commons.LabVal
@@ -452,8 +460,8 @@ func GetBasicList() string {
 				BSubType: QuestionVar.BSubType,
 				BqId:     QuestionVar.BqId,
 				BqText:   QuestionVar.BqText,
-				Answer:   " ",
-				AnswerId: nil,
+				Answer:   "",
+				AnswerId: make([]commons.LabVal, 0),
 			}
 			QuestionsVar = append(QuestionsVar, QuestionVar)
 		}
@@ -1658,6 +1666,40 @@ func SendQuote(hotelId, slabId, rfpId string) string {
 	return "true"
 }
 
+func GetHotelInfo(HotelId string) string {
+	db = GetDB()
+	retr_stmt, err := db.Query("Select hotelName, address, stateMasterId, cityMasterId, cityLocalityId, phone1, phone2, email1, email2, web, checkInTime, checkOutTime from hotelsmaster where hotelsMasterId = '" + HotelId + "'")
+	commons.CheckErr(err)
+	var HotelInfoVar commons.HotelInfo
+	var CityId, StateId, LocalityId string
+	for retr_stmt.Next() {
+		err := retr_stmt.Scan(&HotelInfoVar.HotelName, &HotelInfoVar.Address, &StateId, &CityId, &LocalityId, &HotelInfoVar.PrimaryPhone, &HotelInfoVar.SecondaryPhone, &HotelInfoVar.PrimaryMail, &HotelInfoVar.SecondaryMail, &HotelInfoVar.Web, &HotelInfoVar.CheckIn, &HotelInfoVar.CheckOut)
+		commons.CheckErr(err)
+		err = db.QueryRow("Select cityName from citymaster where cityMasterId = '" + CityId + "'").Scan(&HotelInfoVar.City)
+		err = db.QueryRow("Select stateName from statemaster where stateMasterId = '" + StateId + "'").Scan(&HotelInfoVar.State)
+		err = db.QueryRow("Select cityLocalityName from citylocality where cityLocalityId = '" + LocalityId + "'").Scan(&HotelInfoVar.Locality)
+		HotelInfoVar = commons.HotelInfo{
+			HotelId:        HotelId,
+			HotelName:      HotelInfoVar.HotelName,
+			Address:        HotelInfoVar.Address,
+			State:          HotelInfoVar.State,
+			City:           HotelInfoVar.City,
+			Locality:       HotelInfoVar.Locality,
+			PrimaryPhone:   HotelInfoVar.PrimaryPhone,
+			SecondaryPhone: HotelInfoVar.SecondaryPhone,
+			PrimaryMail:    HotelInfoVar.PrimaryMail,
+			SecondaryMail:  HotelInfoVar.SecondaryMail,
+			Web:            HotelInfoVar.Web,
+			CheckIn:        HotelInfoVar.CheckIn,
+			CheckOut:       HotelInfoVar.CheckOut,
+		}
+
+	}
+	b, err := json.Marshal(HotelInfoVar)
+	commons.CheckErr(err)
+	return string(b)
+}
+
 func CheckDuplicate(tablename, columnname, rfpId, qId string) bool {
 	db = GetDB()
 	var columnvalue string
@@ -1708,7 +1750,7 @@ func GetDB() *sql.DB {
 	var err error
 	if db == nil {
 		db, err = sql.Open("mysql", "root:@/company_policy?parseTime=true&charset=utf8")
-		//	db, err = sql.Open("mysql", "sriram:sriram123@tcp(127.0.0.1:3306)/hotnix_dev?parseTime=true&charset=utf8")
+		//db, err = sql.Open("mysql", "sriram:sriram123@tcp(127.0.0.1:3306)/hotnix_dev?parseTime=true&charset=utf8")
 
 		commons.CheckErr(err)
 	}

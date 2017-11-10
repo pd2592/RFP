@@ -16,6 +16,15 @@ func GetParentCategory(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, db.ParentCategory())
 }
 
+func HotelDetails(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Get some question for Hotels !!!!")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	hotelId := r.FormValue("hotelId")
+
+	fmt.Fprintf(w, db.GetHotelInfo(hotelId))
+}
+
 func RequestHotelQues(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Get some question for Hotels !!!!")
 	err := r.ParseForm()
