@@ -94,6 +94,26 @@ func AssignSlab(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func DeclineRFP(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Rejecting RFP.....")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	hotelId := r.FormValue("hotelId")
+	rfpId := r.FormValue("rfpId")
+
+	fmt.Fprintf(w, db.RejectRFP(hotelId, rfpId))
+
+}
+
+func EngagedCompany(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Populate Rfp/Company connected.....")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	hotelId := r.FormValue("hotelId")
+
+	fmt.Fprintf(w, db.ListCompanyEngaged(hotelId))
+}
+
 // body, err := ioutil.ReadAll(r.Body)
 // commons.CheckErr(err)
 // Question := commons.UnmarshalQuestion(string(body))

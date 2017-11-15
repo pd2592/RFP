@@ -181,8 +181,10 @@ type Companies struct {
 	Company         LabVal   `json:"company,omitempty"`
 	Rfp             LabVal   `json:"rfp,omitempty"`
 	Status          string   `json:"status,omitempty"`
+	RfpStatus       string   `json:"rfpStatus,omitempty"`
 	RoomsYear       string   `json:"roomsYear,omitempty"`
 	Location        []LabVal `json:"location,omitempty"`
+	Slab            LabVal   `json:"slab,omitempty"`
 	ProposalMatched string   `json:"proposalMatched,omitempty"`
 	TravelPerYear   string   `json:"travelPerYear,omitempty"`
 	TravelPerMonth  string   `json:"travelPerMonth,omitempty"`
@@ -247,6 +249,7 @@ type ListQuotes struct {
 type Hotel struct {
 	Hotel           string `json:"hotel,omitempty"`
 	HotelId         string `json:"hotelId,omitempty"`
+	Shortlist       string `json:"shortlist,omitempty"`
 	Location        string `json:"location,omitempty"`
 	MaxPrice        string `json:"maxPrice,omitempty"`
 	MinPrice        string `json:"minPrice,omitempty"`
@@ -256,8 +259,19 @@ type Hotel struct {
 }
 
 type RfpFullView struct {
+	Company CompanyInfo `json:"company,omitempty"`
+	Rfp     LabVal      `json:"rfp,omitempty"`
 	Basic   []BDivision `json:"basic,omitempty"`
 	RfpQues []ParentCat `json:"rfpQues,omitempty"`
+}
+
+type CompanyInfo struct {
+	TravelAgencyMasterId string `json:"travelAgencyMasterId,omitempty"`
+	TravelAgencyMaster   string `json:"travelAgencyMaster,omitempty"`
+	Email                string `json:"email,omitempty"`
+	Phone                string `json:"phone,omitempty"`
+	Mobile               string `json:"mobile,omitempty"`
+	Website              string `json:"website,omitempty"`
 }
 
 func UnmarshalRFPBasic(jsonStr string) *BasicQuestion {

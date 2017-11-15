@@ -78,6 +78,16 @@ func ListHotel(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func RfpDrafted(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Listing Sent Rfp ......")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	travelAgencyMasterId := r.FormValue("travelAgencyMasterId")
+	//fmt.Println(rfpId)
+	a := db.ListRfpDrafted(travelAgencyMasterId)
+	fmt.Fprintln(w, a)
+}
+
 func RfpPublished(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Listing Sent Rfp ......")
 	err := r.ParseForm()
@@ -96,6 +106,48 @@ func RfpQuotes(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println(rfpId)
 	a := db.ListRfpQuotes(rfpId)
 	fmt.Fprintln(w, a)
+}
+
+func DeclineQuote(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Decline Quote Recieved for Rfp ......")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	rfpId := r.FormValue("rfpId")
+	hotelId := r.FormValue("hotelId")
+
+	//fmt.Println(rfpId)
+	a := db.RejectQuotes(rfpId, hotelId)
+	fmt.Fprintln(w, a)
+}
+
+func TrashRfp(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Moving the rfp to trash ......")
+	err := r.ParseForm()
+	commons.CheckErr(err)
+	rfpId := r.FormValue("rfpId")
+	//fmt.Println(rfpId)
+	a := db.TrashedRfp(rfpId)
+	fmt.Fprintln(w, a)
+}
+
+func ShortListQuotes(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("ShortListing Quotes Recieved ......")
+	body, err := ioutil.ReadAll(r.Body)
+	commons.CheckErr(err)
+	RfpSent := commons.UnmarshalRFPSend(string(body))
+
+	//fmt.Println(db.HotelResponse(RfpQues))
+	fmt.Fprintln(w, db.RfpShortlist(RfpSent))
+}
+
+func UnShortListQuotes(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("ShortListing Quotes Recieved ......")
+	body, err := ioutil.ReadAll(r.Body)
+	commons.CheckErr(err)
+	RfpSent := commons.UnmarshalRFPSend(string(body))
+
+	//fmt.Println(db.HotelResponse(RfpQues))
+	fmt.Fprintln(w, db.RfpUnShortlist(RfpSent))
 }
 
 func RfpHotelResponse(w http.ResponseWriter, r *http.Request) {
